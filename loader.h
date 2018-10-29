@@ -41,7 +41,7 @@ public:
   unsigned      type;
   uint64_t      vma;
   uint64_t      size;
-  uint8_t       *bytes;
+  std::vector<uint8_t>       bytes;
 };
 
 class Binary {

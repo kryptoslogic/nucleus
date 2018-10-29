@@ -202,7 +202,7 @@ nucleus_disasm_bb_aarch64(Binary *bin, DisasmSection *dis, BB *bb)
     goto fail;
   }
 
-  pc = dis->section->bytes + offset;
+  pc = dis->section->bytes.data() + offset;
   n = dis->section->size - offset;
   pc_addr = bb->start;
   bb->end = bb->start;

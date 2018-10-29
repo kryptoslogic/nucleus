@@ -230,7 +230,7 @@ load_dynrelocs_bfd(bfd *bfd_h, Binary *bin)
   ((x & ~bfd_howto->dst_mask) | (((x & bfd_howto->src_mask) + relocation) & bfd_howto->dst_mask))
 
       bfd_vma data_offset = bfd_reloc->address * bfd_octets_per_byte(bfd_h);
-      bfd_byte* data = sec.bytes + (data_offset - sec.vma);
+      bfd_byte* data = (uint8_t*)(sec.bytes.data()) + (data_offset - sec.vma);
 
       switch (bfd_howto->size) {
       case 0: bfd_put_8 (bfd_h, APPLY_RELOC(bfd_get_8 (bfd_h, data)), data); break;
@@ -293,13 +293,13 @@ load_sections_bfd(bfd *bfd_h, Binary *bin)
     sec->type   = sectype;
     sec->vma    = vma;
     sec->size   = size;
-    sec->bytes  = (uint8_t*)malloc(size);
-    if(!sec->bytes) {
+    sec->bytes.resize(size);
+    if(!sec->bytes.data()) {
       print_err("out of memory");
       return -1;
     }
 
-    if(!bfd_get_section_contents(bfd_h, bfd_sec, sec->bytes, 0, size)) {
+    if(!bfd_get_section_contents(bfd_h, bfd_sec, sec->bytes.data(), 0, size)) {
       print_err("failed to read section '%s' (%s)", secname, bfd_errmsg(bfd_get_error()));
       return -1;
     }
@@ -423,7 +423,7 @@ fail_arch:
 
   /* Symbol handling is best-effort only (they may not even be present) */
   load_symbols_bfd(bfd_h, bin);
-  load_dynsym_bfd(bfd_h, bin);
+  //load_dynsym_bfd(bfd_h, bin);
 
   if(load_sections_bfd(bfd_h, bin) < 0) goto fail;
 
@@ -500,14 +500,14 @@ load_binary_raw(std::string &fname, Binary *bin, Binary::BinaryType type)
   }
 
   sec->size  = (uint64_t)fsize;
-  sec->bytes = (uint8_t*)malloc(fsize);
-  if(!sec->bytes) {
-    print_err("out of memory");
-    goto fail;
-  }
+  sec->bytes.resize(sec->size);
+  //if(!sec->bytes.data()) {
+  ///  print_err("out of memory");
+  // goto fail;
+  //}
 
   fseek(f, 0L, SEEK_SET);
-  if(fread(sec->bytes, 1, fsize, f) != (size_t)fsize) {
+  if(fread(sec->bytes.data(), 1, fsize, f) != (size_t)fsize) {
     print_err("failed to read binary '%s'", fname.c_str());
     goto fail;
   }
@@ -546,8 +546,8 @@ unload_binary(Binary *bin)
 
   for(i = 0; i < bin->sections.size(); i++) {
     sec = &bin->sections[i];
-    if(sec->bytes) {
-      free(sec->bytes);
+    if(!sec->bytes.empty()) {
+      sec->bytes.resize(0);
     }
   }
 }
