@@ -31,7 +31,7 @@ public:
     SEC_TYPE_DATA = 2
   };
 
-  Section() : binary(NULL), type(0), vma(0), size(0), bytes(NULL) {}
+  Section() : binary(NULL), type(0), vma(0), size(0), bytes({}) {}
 
   bool contains        (uint64_t addr) { return (addr >= vma) && (addr-vma < size); }
   bool is_import_table ()              { return name == ".plt"; }
